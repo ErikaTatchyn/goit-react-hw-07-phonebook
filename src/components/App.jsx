@@ -1,54 +1,38 @@
-import { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { fetchContacts } from 'redux/operations';
 import {
-  deleteContact,
-  fetchContacts,
   selectContacts,
-} from 'redux/contactsSlice';
+  selectContactsError,
+  selectContactsLoading,
+} from 'redux/selectors';
+import styles from './App.module.css';
+
 import ContactForm from './ContactForm/ContactForm';
 import ContactList from './ContactList/ContactList';
-
 import Filter from './Filter/Filter';
 
 export function App() {
-  const contacts = useSelector(selectContacts);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const dispatch = useDispatch();
-
-  const handleDeleteContact = id => {
-    dispatch(deleteContact(id));
-  };
-
-  const handleFetchContacts = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await dispatch(fetchContacts());
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const contacts = useSelector(selectContacts);
+  const isLoading = useSelector(selectContactsLoading);
+  const error = useSelector(selectContactsError);
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
   return (
-    <div>
-      <h1>Phonebook</h1>
-      <ContactForm />
+    <div className={styles.container}>
+      <h1 className={styles.heading}>Phonebook</h1>
+      <ContactForm contacts={contacts} />
 
-      <h2>Contacts</h2>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : error ? (
-        <p>Error: {error}</p>
-      ) : contacts.length > 0 ? (
-        <>
-          <button onClick={handleFetchContacts}>Refresh</button>
+      <h2 className={styles.heading}>Contacts</h2>
+      {contacts.length > 0 ? (
+        <div>
           <Filter />
           <ContactList />
-        </>
+          {isLoading && <p>Loading...</p>}
+          {error && <p>{error}</p>}
+        </div>
       ) : (
         <p>Your phonebook is empty. Please add contacts.</p>
       )}
